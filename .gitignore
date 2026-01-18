@@ -21,3 +21,7 @@ results*.txt
 *.swp
 *~
 .DS_Store
+
+# allow publishing results under result/
+!result/
+!result/**

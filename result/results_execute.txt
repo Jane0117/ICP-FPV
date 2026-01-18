@@ -1,0 +1,40 @@
+
+  Summary Results
+   Property Summary: FPV
+   -----------------
+   > Assertion
+     - # found        : 8
+     - # proven       : 8
+
+   > Cover
+     - # found        : 1
+     - # covered      : 1
+
+   > Constraint
+     - # found        : 1
+
+
+  List Results
+   Property List:
+   --------------
+   > Assertion
+     # Assertion: 8
+     [  0] proven                                  -  execute_top_formal.chk.assert_alu_data
+     [  1] proven                                  -  execute_top_formal.chk.assert_control_out
+     [  2] proven                                  -  execute_top_formal.chk.assert_jalr_flag
+     [  3] proven                                  -  execute_top_formal.chk.assert_jalr_target
+     [  4] proven                                  -  execute_top_formal.chk.assert_memory_data
+     [  5] proven                                  -  execute_top_formal.chk.assert_overflow
+     [  6] proven                                  -  execute_top_formal.chk.assert_pc_out
+     [  7] proven                                  -  execute_top_formal.chk.assert_pc_src
+
+   > Cover
+     # Cover: 1
+     [  8] covered     (depth=1)                   -  execute_top_formal.chk.cover_b_type_taken
+
+   > Constraint
+     # Constraint: 1
+     [  9] constrained                             -  constant_9 - reset_n==1
+
+
+

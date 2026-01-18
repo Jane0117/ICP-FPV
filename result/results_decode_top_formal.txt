@@ -1,0 +1,42 @@
+
+  Summary Results
+   Property Summary: FPV
+   -----------------
+   > Assertion
+     - # found        : 5
+     - # proven       : 5
+
+   > Cover
+     - # found        : 6
+     - # covered      : 6
+
+   > Constraint
+     - # found        : 1
+
+
+  List Results
+   Property List:
+   --------------
+   > Assertion
+     # Assertion: 5
+     [   0] proven                                  -  decode_top_formal.chk.assert_control_matches_ref
+     [   1] proven                                  -  decode_top_formal.chk.assert_illegal_matches_ref
+     [   2] proven                                  -  decode_top_formal.chk.assert_immediate_matches_ref
+     [   3] proven                                  -  decode_top_formal.chk.assert_pc_out
+     [   4] proven                                  -  decode_top_formal.chk.assert_reg_rd_id
+
+   > Cover
+     # Cover: 6
+     [   5] covered     (depth=1)                   -  decode_top_formal.chk.cover_b_type
+     [   6] covered     (depth=1)                   -  decode_top_formal.chk.cover_i_type
+     [   7] covered     (depth=1)                   -  decode_top_formal.chk.cover_j_type
+     [   8] covered     (depth=1)                   -  decode_top_formal.chk.cover_r_type
+     [   9] covered     (depth=1)                   -  decode_top_formal.chk.cover_s_type
+     [  10] covered     (depth=1)                   -  decode_top_formal.chk.cover_u_type
+
+   > Constraint
+     # Constraint: 1
+     [  11] constrained                             -  constant_11 - reset_n==1
+
+
+
