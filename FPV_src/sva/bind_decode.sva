@@ -1,0 +1,2 @@
+// SVA binding
+bind decode_top_formal decode_props chk (.*);

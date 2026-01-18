@@ -1,0 +1,100 @@
+`timescale 1ns / 1ps
+
+import common::*;
+import ref_model_pkg::*;
+
+module execute_props(
+    input logic clk,
+    input logic reset_n,
+    input logic [31:0] data1,
+    input logic [31:0] data2,
+    input logic [31:0] immediate_data,
+    input logic [31:0] pc_in,
+    input control_type control_in,
+    input control_type control_out,
+    input logic [31:0] alu_data,
+    input logic [31:0] memory_data,
+    input logic pc_src,
+    input logic [31:0] jalr_target_offset,
+    input logic jalr_flag,
+    input logic [31:0] pc_out,
+    input logic overflow
+);
+    logic [31:0] data2_or_imm;
+    logic [31:0] left_operand;
+    logic [31:0] right_operand;
+    logic [31:0] ref_alu_result;
+    logic ref_zero_flag;
+    logic [31:0] ref_alu_data;
+    logic [31:0] ref_memory_data;
+    logic ref_pc_src;
+    logic [31:0] ref_jalr_target_offset;
+    logic ref_jalr_flag;
+    logic [31:0] ref_pc_out;
+    logic ref_overflow_flag;
+
+    always_comb begin
+        data2_or_imm = (control_in.alu_src) ? immediate_data : data2;
+        left_operand = data1;
+        right_operand = data2_or_imm;
+
+        ref_alu_result = ref_alu(control_in.alu_op, left_operand, right_operand);
+        ref_zero_flag = (ref_alu_result == 0);
+
+        ref_alu_data = ref_alu_result;
+        ref_jalr_flag = 1'b0;
+        ref_jalr_target_offset = '0;
+        if (control_in.encoding == I_TYPE && control_in.is_branch) begin
+            ref_alu_data = pc_in + 32'd4;
+            ref_jalr_flag = 1'b1;
+            ref_jalr_target_offset = left_operand + immediate_data;
+        end else if (control_in.encoding == J_TYPE) begin
+            ref_alu_data = pc_in + 32'd4;
+        end
+
+        if (control_in.encoding == B_TYPE)
+            ref_pc_src = ref_zero_flag;
+        else
+            ref_pc_src = 1'b0;
+
+        ref_memory_data = (control_in.encoding == S_TYPE) ? data2 : data2;
+        ref_pc_out = pc_in;
+        ref_overflow_flag = ref_overflow(control_in.alu_op, left_operand, right_operand, ref_alu_result);
+    end
+
+    assert_control_out: assert property (@(posedge clk) disable iff (!reset_n)
+        control_out == control_in
+    );
+
+    assert_alu_data: assert property (@(posedge clk) disable iff (!reset_n)
+        alu_data == ref_alu_data
+    );
+
+    assert_memory_data: assert property (@(posedge clk) disable iff (!reset_n)
+        memory_data == ref_memory_data
+    );
+
+    assert_pc_src: assert property (@(posedge clk) disable iff (!reset_n)
+        pc_src == ref_pc_src
+    );
+
+    assert_jalr_flag: assert property (@(posedge clk) disable iff (!reset_n)
+        jalr_flag == ref_jalr_flag
+    );
+
+    assert_jalr_target: assert property (@(posedge clk) disable iff (!reset_n)
+        jalr_target_offset == ref_jalr_target_offset
+    );
+
+    assert_pc_out: assert property (@(posedge clk) disable iff (!reset_n)
+        pc_out == ref_pc_out
+    );
+
+    assert_overflow: assert property (@(posedge clk) disable iff (!reset_n)
+        overflow == ref_overflow_flag
+    );
+
+    cover_b_type_taken: cover property (@(posedge clk) disable iff (!reset_n)
+        control_in.encoding == B_TYPE && ref_pc_src
+    );
+endmodule

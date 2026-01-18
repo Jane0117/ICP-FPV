@@ -1,0 +1,184 @@
+`timescale 1ns / 1ps
+
+import common::*;
+import ref_model_pkg::*;
+
+module decode_execute_props(
+    input  logic            clk,
+    input  logic            reset_n,
+
+    // --- from decode_execute_top ports / internal signals (bound by bind file) ---
+    input  instruction_type instruction,
+    input  logic [31:0]     pc_in,
+
+    // decode-stage internal taps
+    input  logic [4:0]      reg_rd_id,
+    input  logic [31:0]     read_data1,
+    input  logic [31:0]     read_data2,
+    input  logic [31:0]     immediate_data,
+    input  logic [31:0]     decode_pc_out,
+    input  control_type     control_signals,
+    input  control_type     control_signals_sanitized,
+    input  logic            instruction_illegal,
+
+    // execute-stage outputs
+    input  control_type     control_out,
+    input  logic [31:0]     alu_data,
+    input  logic [31:0]     memory_data,
+    input  logic            pc_src,
+    input  logic [31:0]     jalr_target_offset,
+    input  logic            jalr_flag,
+    input  logic [31:0]     pc_out,
+    input  logic            overflow
+);
+
+    // -----------------------------
+    // Reference model signals
+    // -----------------------------
+    control_type ref_control;
+    logic        ref_decode_failed;
+    logic        ref_reg_illegal_flag;
+    logic        ref_instruction_illegal;
+    control_type ref_control_sanitized;
+
+    logic [31:0] data2_or_imm;
+    logic [31:0] left_operand;
+    logic [31:0] right_operand;
+
+    logic [31:0] ref_alu_result;
+    logic        ref_zero_flag;
+
+    logic [31:0] ref_alu_data;
+    logic [31:0] ref_memory_data;
+    logic        ref_pc_src;
+    logic [31:0] ref_jalr_target_offset;
+    logic        ref_jalr_flag;
+    logic [31:0] ref_pc_out;
+    logic        ref_overflow_flag;
+
+    // -----------------------------
+    // Combinational reference model
+    // -----------------------------
+    always_comb begin
+        // Decode reference
+        ref_decode(instruction, ref_control, ref_decode_failed);
+        ref_reg_illegal_flag     = ref_reg_illegal(ref_control, instruction, reg_rd_id);
+        ref_instruction_illegal  = ref_decode_failed | ref_reg_illegal_flag;
+        ref_control_sanitized    = ref_instruction_illegal ? '0 : ref_control;
+
+        // Execute reference (no forwarding in this setup)
+        data2_or_imm   = (ref_control_sanitized.alu_src) ? immediate_data : read_data2;
+        left_operand   = read_data1;
+        right_operand  = data2_or_imm;
+
+        ref_alu_result = ref_alu(ref_control_sanitized.alu_op, left_operand, right_operand);
+        ref_zero_flag  = (ref_alu_result == 32'd0);
+
+        // Default
+        ref_alu_data          = ref_alu_result;
+        ref_jalr_flag         = 1'b0;
+        ref_jalr_target_offset= '0;
+
+        // JALR (I_TYPE + is_branch) / J_TYPE special case: writeback pc+4
+        if (ref_control_sanitized.encoding == I_TYPE && ref_control_sanitized.is_branch) begin
+            ref_alu_data           = decode_pc_out + 32'd4;
+            ref_jalr_flag          = 1'b1;
+            ref_jalr_target_offset = left_operand + immediate_data;
+        end
+        else if (ref_control_sanitized.encoding == J_TYPE) begin
+            ref_alu_data           = decode_pc_out + 32'd4;
+        end
+
+        // Branch decision (your execute_stage: only B_TYPE uses zero_flag)
+        if (ref_control_sanitized.encoding == B_TYPE)
+            ref_pc_src = ref_zero_flag;
+        else
+            ref_pc_src = 1'b0;
+
+        // Store data path in your execute_stage: memory_data is read_data2 when no forwarding
+        // (Your current code assigns read_data2 in both branches; keep same.)
+        ref_memory_data   = read_data2;
+
+        ref_pc_out        = decode_pc_out;
+
+        // Overflow reference
+        ref_overflow_flag = ref_overflow(ref_control_sanitized.alu_op,
+                                         left_operand, right_operand, ref_alu_result);
+    end
+
+    // ============================================================
+    // Assertions / Covers MUST be outside procedural blocks
+    // ============================================================
+
+    // (Optional cleaner style, keep explicit clk/rst form for clarity)
+    assert_control_matches_ref: assert property (@(posedge clk) disable iff (!reset_n)
+        control_signals == ref_control
+    );
+
+    assert_illegal_matches_ref: assert property (@(posedge clk) disable iff (!reset_n)
+        instruction_illegal == ref_instruction_illegal
+    );
+
+    assert_sanitized_control: assert property (@(posedge clk) disable iff (!reset_n)
+        control_signals_sanitized == (instruction_illegal ? '0 : control_signals)
+    );
+
+    assert_execute_control_out: assert property (@(posedge clk) disable iff (!reset_n)
+        control_out == ref_control_sanitized
+    );
+
+    assert_execute_alu_data: assert property (@(posedge clk) disable iff (!reset_n)
+        alu_data == ref_alu_data
+    );
+
+    assert_execute_memory_data: assert property (@(posedge clk) disable iff (!reset_n)
+        memory_data == ref_memory_data
+    );
+
+    assert_execute_pc_src: assert property (@(posedge clk) disable iff (!reset_n)
+        pc_src == ref_pc_src
+    );
+
+    assert_execute_jalr_flag: assert property (@(posedge clk) disable iff (!reset_n)
+        jalr_flag == ref_jalr_flag
+    );
+
+    assert_execute_jalr_target: assert property (@(posedge clk) disable iff (!reset_n)
+        jalr_target_offset == ref_jalr_target_offset
+    );
+
+    assert_execute_pc_out: assert property (@(posedge clk) disable iff (!reset_n)
+        pc_out == ref_pc_out
+    );
+
+    assert_execute_overflow: assert property (@(posedge clk) disable iff (!reset_n)
+        overflow == ref_overflow_flag
+    );
+
+    // Covers for basic instruction-type reachability
+    cover_r_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control_sanitized.encoding == R_TYPE
+    );
+
+    cover_i_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control_sanitized.encoding == I_TYPE
+    );
+
+    cover_s_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control_sanitized.encoding == S_TYPE
+    );
+
+    cover_b_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control_sanitized.encoding == B_TYPE
+    );
+
+    cover_u_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control_sanitized.encoding == U_TYPE
+    );
+
+    cover_j_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control_sanitized.encoding == J_TYPE
+    );
+
+endmodule
+

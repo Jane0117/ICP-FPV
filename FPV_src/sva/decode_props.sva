@@ -1,0 +1,66 @@
+`timescale 1ns / 1ps
+
+import common::*;
+import ref_model_pkg::*;
+
+module decode_props(
+    input logic clk,
+    input logic reset_n,
+    input instruction_type instruction,
+    input logic [31:0] pc_in,
+    input logic [4:0] reg_rd_id,
+    input logic [31:0] immediate_data,
+    input logic [31:0] pc_out,
+    input logic instruction_illegal,
+    input control_type control_signals
+);
+    control_type ref_control;
+    logic ref_decode_failed;
+    logic ref_reg_illegal_flag;
+    logic ref_instruction_illegal;
+
+    always_comb begin
+        ref_decode(instruction, ref_control, ref_decode_failed);
+        ref_reg_illegal_flag = ref_reg_illegal(ref_control, instruction, reg_rd_id);
+        ref_instruction_illegal = ref_decode_failed | ref_reg_illegal_flag;
+    end
+
+    assert_control_matches_ref: assert property (@(posedge clk) disable iff (!reset_n)
+        control_signals == ref_control
+    );
+
+    assert_immediate_matches_ref: assert property (@(posedge clk) disable iff (!reset_n)
+        immediate_data == immediate_extension(instruction, ref_control.encoding)
+    );
+
+    assert_illegal_matches_ref: assert property (@(posedge clk) disable iff (!reset_n)
+        instruction_illegal == ref_instruction_illegal
+    );
+
+    assert_reg_rd_id: assert property (@(posedge clk) disable iff (!reset_n)
+        reg_rd_id == instruction.rd
+    );
+
+    assert_pc_out: assert property (@(posedge clk) disable iff (!reset_n)
+        pc_out == pc_in
+    );
+
+    cover_r_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control.encoding == R_TYPE
+    );
+    cover_i_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control.encoding == I_TYPE
+    );
+    cover_s_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control.encoding == S_TYPE
+    );
+    cover_b_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control.encoding == B_TYPE
+    );
+    cover_u_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control.encoding == U_TYPE
+    );
+    cover_j_type: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_control.encoding == J_TYPE
+    );
+endmodule

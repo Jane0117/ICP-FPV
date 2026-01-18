@@ -1,0 +1,23 @@
+# formal generated / databases / logs
+vcst_rtdb/
+FPV/run/
+FPV/**/vcst_rtdb/
+FPV/**/.vcst_rtdb/
+FPV/**/verdiLog/
+FPV/**/verdi/
+FPV.bak.*/
+*.log
+*.jou
+*.history
+results*.txt
+*.vcd
+*.wlf
+*.fsdb
+*_learn_dir/
+
+# editors
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store

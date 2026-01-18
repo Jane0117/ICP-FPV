@@ -1,0 +1,2 @@
+// SVA binding
+bind execute_top_formal execute_props chk (.*);
