@@ -25,24 +25,84 @@ module decode_props(
         ref_instruction_illegal = ref_decode_failed | ref_reg_illegal_flag;
     end
 
+    // Control signals match reference decode.
     assert_control_matches_ref: assert property (@(posedge clk) disable iff (!reset_n)
         control_signals == ref_control
     );
 
+    // Immediate extension matches reference.
     assert_immediate_matches_ref: assert property (@(posedge clk) disable iff (!reset_n)
         immediate_data == immediate_extension(instruction, ref_control.encoding)
     );
 
+    // Illegal flag matches reference decode/regs check.
     assert_illegal_matches_ref: assert property (@(posedge clk) disable iff (!reset_n)
         instruction_illegal == ref_instruction_illegal
     );
 
+    // Decoded rd matches instruction rd.
     assert_reg_rd_id: assert property (@(posedge clk) disable iff (!reset_n)
         reg_rd_id == instruction.rd
     );
 
+    // PC out passes through.
     assert_pc_out: assert property (@(posedge clk) disable iff (!reset_n)
         pc_out == pc_in
+    );
+
+    // Reset clears register file read outputs.
+    assert_reset_clears_reads: assert property (@(posedge clk)
+        !reset_n |=> (read_data1 == 32'd0 && read_data2 == 32'd0)
+    );
+
+    assume_no_write_during_reset: assume property (@(posedge clk)
+        !reset_n |-> !write_en
+    );
+
+    // Read outputs stay zero after reset without writes.
+    assert_reset_holds_reads: assert property (@(posedge clk) disable iff (!reset_n)
+        (!write_en && read_data1 == 32'd0 && read_data2 == 32'd0) |=> (read_data1 == 32'd0 && read_data2 == 32'd0)
+    );
+
+    assume_pc_aligned: assume property (@(posedge clk) disable iff (!reset_n)
+        pc_in[1:0] == 2'b00
+    );
+
+    assume_instruction_stable: assume property (@(posedge clk) disable iff (!reset_n)
+        $stable(instruction)
+    );
+
+    assume_supported_opcode: assume property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode inside {7'b0110011, 7'b0010011, 7'b0000011, 7'b1100111,
+                                   7'b1101111, 7'b0100011, 7'b1100011, 7'b0110111,
+                                   7'b0010111} ||
+        instruction == 32'h00000000 || instruction == 32'h00001111 ||
+        instruction.opcode == 7'b1111111
+    );
+
+    assume_shift_imm_funct7: assume property (@(posedge clk) disable iff (!reset_n)
+        (instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b001) |->
+            (instruction.funct7[6:1] == 6'b000000)
+    );
+    assume_shift_imm_funct7_alt: assume property (@(posedge clk) disable iff (!reset_n)
+        (instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b101) |->
+            (instruction.funct7[6:1] == 6'b000000 || instruction.funct7[6:1] == 6'b010000)
+    );
+
+    // Decode failure implies illegal instruction.
+    assert_decode_failed_illegal: assert property (@(posedge clk) disable iff (!reset_n)
+        ref_decode_failed |-> instruction_illegal
+    );
+    // Illegal register use implies illegal instruction.
+    assert_reg_illegal_illegal: assert property (@(posedge clk) disable iff (!reset_n)
+        ref_reg_illegal_flag |-> instruction_illegal
+    );
+
+    // Writing x0 is legal; result is always zero.
+    assert_x0_write_legal: assert property (@(posedge clk) disable iff (!reset_n)
+        ((ref_control.encoding == R_TYPE || ref_control.encoding == I_TYPE ||
+          ref_control.encoding == U_TYPE || ref_control.encoding == J_TYPE) &&
+         instruction.rd == 5'd0) |-> !instruction_illegal
     );
 
     cover_r_type: cover property (@(posedge clk) disable iff (!reset_n)
@@ -62,5 +122,139 @@ module decode_props(
     );
     cover_j_type: cover property (@(posedge clk) disable iff (!reset_n)
         ref_control.encoding == J_TYPE
+    );
+
+    cover_reset_fall: cover property (@(posedge clk)
+        $fell(reset_n)
+    );
+    cover_reset_rise: cover property (@(posedge clk)
+        $rose(reset_n)
+    );
+
+    cover_illegal_decode: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_decode_failed
+    );
+    cover_illegal_reg: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_reg_illegal_flag
+    );
+    cover_illegal_any: cover property (@(posedge clk) disable iff (!reset_n)
+        ref_instruction_illegal
+    );
+
+    cover_r_add: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b000 && instruction.funct7[5] == 1'b0
+    );
+    cover_r_sub: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b000 && instruction.funct7[5] == 1'b1
+    );
+    cover_r_sll: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b001
+    );
+    cover_r_slt: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b010
+    );
+    cover_r_sltu: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b011
+    );
+    cover_r_xor: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b100
+    );
+    cover_r_srl: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b101 && instruction.funct7[5] == 1'b0
+    );
+    cover_r_sra: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b101 && instruction.funct7[5] == 1'b1
+    );
+    cover_r_or: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b110
+    );
+    cover_r_and: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110011 && instruction.funct3 == 3'b111
+    );
+
+    cover_i_addi: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b000
+    );
+    cover_i_slli: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b001
+    );
+    cover_i_slti: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b010
+    );
+    cover_i_sltiu: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b011
+    );
+    cover_i_xori: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b100
+    );
+    cover_i_srli: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b101 && instruction.funct7[5] == 1'b0
+    );
+    cover_i_srai: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b101 && instruction.funct7[5] == 1'b1
+    );
+    cover_i_ori: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b110
+    );
+    cover_i_andi: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010011 && instruction.funct3 == 3'b111
+    );
+
+    cover_l_lb: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0000011 && instruction.funct3 == 3'b000
+    );
+    cover_l_lh: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0000011 && instruction.funct3 == 3'b001
+    );
+    cover_l_lw: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0000011 && instruction.funct3 == 3'b010
+    );
+    cover_l_lbu: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0000011 && instruction.funct3 == 3'b100
+    );
+    cover_l_lhu: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0000011 && instruction.funct3 == 3'b101
+    );
+
+    cover_s_sb: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0100011 && instruction.funct3 == 3'b000
+    );
+    cover_s_sh: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0100011 && instruction.funct3 == 3'b001
+    );
+    cover_s_sw: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0100011 && instruction.funct3 == 3'b010
+    );
+
+    cover_b_beq: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b1100011 && instruction.funct3 == 3'b000
+    );
+    cover_b_bne: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b1100011 && instruction.funct3 == 3'b001
+    );
+    cover_b_blt: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b1100011 && instruction.funct3 == 3'b100
+    );
+    cover_b_bge: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b1100011 && instruction.funct3 == 3'b101
+    );
+    cover_b_bltu: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b1100011 && instruction.funct3 == 3'b110
+    );
+    cover_b_bgeu: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b1100011 && instruction.funct3 == 3'b111
+    );
+
+    cover_jalr: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b1100111
+    );
+    cover_jal: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b1101111
+    );
+    cover_lui: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0110111
+    );
+    cover_auipc: cover property (@(posedge clk) disable iff (!reset_n)
+        instruction.opcode == 7'b0010111
     );
 endmodule

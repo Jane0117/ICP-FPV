@@ -76,58 +76,103 @@ module execute_props(
         ref_overflow_flag = ref_overflow(control_in.alu_op, left_operand, right_operand, ref_alu_result);
     end
 
+    // Execute control_out mirrors control_in.
     assert_control_out: assert property (@(posedge clk) disable iff (!reset_n)
         control_out == control_in
     );
 
+    // ALU output matches reference.
     assert_alu_data: assert property (@(posedge clk) disable iff (!reset_n)
         alu_data == ref_alu_data
     );
 
+    // Memory data output matches reference.
     assert_memory_data: assert property (@(posedge clk) disable iff (!reset_n)
         memory_data == ref_memory_data
     );
 
+    // PC source decision matches reference.
     assert_pc_src: assert property (@(posedge clk) disable iff (!reset_n)
         pc_src == ref_pc_src
     );
 
+    // JALR flag matches reference.
     assert_jalr_flag: assert property (@(posedge clk) disable iff (!reset_n)
         jalr_flag == ref_jalr_flag
     );
 
+    // JALR target offset matches reference.
     assert_jalr_target: assert property (@(posedge clk) disable iff (!reset_n)
         jalr_target_offset == ref_jalr_target_offset
     );
 
+    // PC out passes through.
     assert_pc_out: assert property (@(posedge clk) disable iff (!reset_n)
         pc_out == ref_pc_out
     );
 
+    // Overflow flag matches reference.
     assert_overflow: assert property (@(posedge clk) disable iff (!reset_n)
         overflow == ref_overflow_flag
     );
 
+    // JALR target must be aligned to 2 bytes (LSB cleared).
+    assert_jalr_target_aligned: assert property (@(posedge clk) disable iff (!reset_n)
+        jalr_flag |-> (jalr_target_offset[0] == 1'b0)
+    );
+    // JALR target equals (rs1 + imm) with LSB cleared.
+    assert_jalr_target_masked: assert property (@(posedge clk) disable iff (!reset_n)
+        jalr_flag |-> (jalr_target_offset == ((left_operand + immediate_data) & 32'hffff_fffe))
+    );
+
+    // Branch compare semantics for signed/unsigned variants.
+    assert_blt_signed_compare: assert property (@(posedge clk) disable iff (!reset_n)
+        (control_in.encoding == B_TYPE && control_in.alu_op == B_BLT) |->
+            (pc_src == ($signed(left_operand) < $signed(right_operand)))
+    );
+    // BGE uses signed comparison.
+    assert_bge_signed_compare: assert property (@(posedge clk) disable iff (!reset_n)
+        (control_in.encoding == B_TYPE && control_in.alu_op == B_BGE) |->
+            (pc_src == ($signed(left_operand) >= $signed(right_operand)))
+    );
+    // BLTU uses unsigned comparison.
+    assert_bltu_unsigned_compare: assert property (@(posedge clk) disable iff (!reset_n)
+        (control_in.encoding == B_TYPE && control_in.alu_op == B_LTU) |->
+            (pc_src == (left_operand < right_operand))
+    );
+    // BGEU uses unsigned comparison.
+    assert_bgeu_unsigned_compare: assert property (@(posedge clk) disable iff (!reset_n)
+        (control_in.encoding == B_TYPE && control_in.alu_op == B_GEU) |->
+            (pc_src == (left_operand >= right_operand))
+    );
+
+    // RS1 forwarding from EX selects mem_forward_data.
     assert_forward_rs1_sel: assert property (@(posedge clk) disable iff (!reset_n)
         (forward_rs1 == FORWARD_FROM_EX)  |-> (left_operand == mem_forward_data)
     );
+    // RS1 forwarding from MEM selects wb_forward_data.
     assert_forward_rs1_sel_mem: assert property (@(posedge clk) disable iff (!reset_n)
         (forward_rs1 == FORWARD_FROM_MEM) |-> (left_operand == wb_forward_data)
     );
+    // RS1 forwarding NONE selects register data.
     assert_forward_rs1_sel_none: assert property (@(posedge clk) disable iff (!reset_n)
         (forward_rs1 == FORWARD_NONE)     |-> (left_operand == data1)
     );
 
+    // RS2 forwarding from EX selects mem_forward_data.
     assert_forward_rs2_sel: assert property (@(posedge clk) disable iff (!reset_n)
         (forward_rs2 == FORWARD_FROM_EX)  |-> (rs2_forwarded == mem_forward_data)
     );
+    // RS2 forwarding from MEM selects wb_forward_data.
     assert_forward_rs2_sel_mem: assert property (@(posedge clk) disable iff (!reset_n)
         (forward_rs2 == FORWARD_FROM_MEM) |-> (rs2_forwarded == wb_forward_data)
     );
+    // RS2 forwarding NONE selects register/immediate.
     assert_forward_rs2_sel_none: assert property (@(posedge clk) disable iff (!reset_n)
         (forward_rs2 == FORWARD_NONE)     |-> (rs2_forwarded == data2_or_imm)
     );
 
+    // Store data reflects RS2 forwarding.
     assert_store_data_forward: assert property (@(posedge clk) disable iff (!reset_n)
         (control_in.encoding == S_TYPE) |-> (memory_data == store_data)
     );
