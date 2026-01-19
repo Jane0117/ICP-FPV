@@ -20,6 +20,10 @@ module decode_execute_props(
     input  control_type     control_signals,
     input  control_type     control_signals_sanitized,
     input  logic            instruction_illegal,
+    input  logic [31:0]     wb_forward_data,
+    input  logic [31:0]     mem_forward_data,
+    input  forward_type     forward_rs1,
+    input  forward_type     forward_rs2,
 
     // execute-stage outputs
     input  control_type     control_out,
@@ -44,6 +48,8 @@ module decode_execute_props(
     logic [31:0] data2_or_imm;
     logic [31:0] left_operand;
     logic [31:0] right_operand;
+    logic [31:0] rs2_forwarded;
+    logic [31:0] store_data;
 
     logic [31:0] ref_alu_result;
     logic        ref_zero_flag;
@@ -66,10 +72,17 @@ module decode_execute_props(
         ref_instruction_illegal  = ref_decode_failed | ref_reg_illegal_flag;
         ref_control_sanitized    = ref_instruction_illegal ? '0 : ref_control;
 
-        // Execute reference (no forwarding in this setup)
+        // Execute reference with forwarding selection
         data2_or_imm   = (ref_control_sanitized.alu_src) ? immediate_data : read_data2;
-        left_operand   = read_data1;
-        right_operand  = data2_or_imm;
+        left_operand   = ref_forward_select(read_data1, wb_forward_data, mem_forward_data, forward_rs1);
+        rs2_forwarded  = ref_forward_select(data2_or_imm, wb_forward_data, mem_forward_data, forward_rs2);
+
+        case (ref_control_sanitized.encoding)
+            R_TYPE, S_TYPE, B_TYPE: right_operand = rs2_forwarded;
+            default: right_operand = data2_or_imm;
+        endcase
+        if (ref_control_sanitized.encoding == S_TYPE)
+            right_operand = data2_or_imm;
 
         ref_alu_result = ref_alu(ref_control_sanitized.alu_op, left_operand, right_operand);
         ref_zero_flag  = (ref_alu_result == 32'd0);
@@ -95,9 +108,9 @@ module decode_execute_props(
         else
             ref_pc_src = 1'b0;
 
-        // Store data path in your execute_stage: memory_data is read_data2 when no forwarding
-        // (Your current code assigns read_data2 in both branches; keep same.)
-        ref_memory_data   = read_data2;
+        // Store data path with forwarding on rs2
+        store_data = ref_forward_select(read_data2, wb_forward_data, mem_forward_data, forward_rs2);
+        ref_memory_data   = (ref_control_sanitized.encoding == S_TYPE) ? store_data : read_data2;
 
         ref_pc_out        = decode_pc_out;
 

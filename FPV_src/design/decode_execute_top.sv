@@ -12,6 +12,8 @@ module decode_execute_top(
     input logic [31:0] write_data,
     input logic [31:0] wb_forward_data,
     input logic [31:0] mem_forward_data,
+    input forward_type forward_rs1,
+    input forward_type forward_rs2,
     output control_type control_out,
     output logic [31:0] alu_data,
     output logic [31:0] memory_data,
@@ -30,8 +32,6 @@ module decode_execute_top(
     logic [31:0] decode_pc_out;
     control_type control_signals;
     control_type control_signals_sanitized;
-    forward_type forward_rs1_tieoff;
-    forward_type forward_rs2_tieoff;
 
     decode_stage u_decode_stage(
         .clk(clk),
@@ -51,8 +51,6 @@ module decode_execute_top(
     );
 
     assign control_signals_sanitized = instruction_illegal ? '0 : control_signals;
-    assign forward_rs1_tieoff = FORWARD_NONE;
-    assign forward_rs2_tieoff = FORWARD_NONE;
 
     execute_stage u_execute_stage(
         .data1(read_data1),
@@ -62,8 +60,8 @@ module decode_execute_top(
         .control_in(control_signals_sanitized),
         .wb_forward_data(wb_forward_data),
         .mem_forward_data(mem_forward_data),
-        .forward_rs1(forward_rs1_tieoff),
-        .forward_rs2(forward_rs2_tieoff),
+        .forward_rs1(forward_rs1),
+        .forward_rs2(forward_rs2),
         .control_out(control_out),
         .alu_data(alu_data),
         .memory_data(memory_data),

@@ -142,6 +142,19 @@ package ref_model_pkg;
         return reg_illegal;
     endfunction
 
+    function automatic logic [31:0] ref_forward_select(
+        input logic [31:0] reg_data,
+        input logic [31:0] wb_data,
+        input logic [31:0] mem_data,
+        input forward_type sel
+    );
+        case (sel)
+            FORWARD_FROM_EX:  ref_forward_select = mem_data;
+            FORWARD_FROM_MEM: ref_forward_select = wb_data;
+            default:          ref_forward_select = reg_data;
+        endcase
+    endfunction
+
     function automatic logic [31:0] ref_alu(alu_op_type op,
                                            logic [31:0] left_operand,
                                            logic [31:0] right_operand);
