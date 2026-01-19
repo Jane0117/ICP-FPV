@@ -168,6 +168,30 @@ module decode_execute_props(
         overflow == ref_overflow_flag
     );
 
+    assert_forward_rs1_sel: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs1 == FORWARD_FROM_EX)  |-> (left_operand == mem_forward_data)
+    );
+    assert_forward_rs1_sel_mem: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs1 == FORWARD_FROM_MEM) |-> (left_operand == wb_forward_data)
+    );
+    assert_forward_rs1_sel_none: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs1 == FORWARD_NONE)     |-> (left_operand == read_data1)
+    );
+
+    assert_forward_rs2_sel: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs2 == FORWARD_FROM_EX)  |-> (rs2_forwarded == mem_forward_data)
+    );
+    assert_forward_rs2_sel_mem: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs2 == FORWARD_FROM_MEM) |-> (rs2_forwarded == wb_forward_data)
+    );
+    assert_forward_rs2_sel_none: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs2 == FORWARD_NONE)     |-> (rs2_forwarded == data2_or_imm)
+    );
+
+    assert_store_data_forward: assert property (@(posedge clk) disable iff (!reset_n)
+        (ref_control_sanitized.encoding == S_TYPE) |-> (memory_data == store_data)
+    );
+
     // Covers for basic instruction-type reachability
     cover_r_type: cover property (@(posedge clk) disable iff (!reset_n)
         ref_control_sanitized.encoding == R_TYPE
@@ -191,6 +215,26 @@ module decode_execute_props(
 
     cover_j_type: cover property (@(posedge clk) disable iff (!reset_n)
         ref_control_sanitized.encoding == J_TYPE
+    );
+
+    cover_forward_rs1_ex: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs1 == FORWARD_FROM_EX
+    );
+    cover_forward_rs1_mem: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs1 == FORWARD_FROM_MEM
+    );
+    cover_forward_rs1_none: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs1 == FORWARD_NONE
+    );
+
+    cover_forward_rs2_ex: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs2 == FORWARD_FROM_EX
+    );
+    cover_forward_rs2_mem: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs2 == FORWARD_FROM_MEM
+    );
+    cover_forward_rs2_none: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs2 == FORWARD_NONE
     );
 
 endmodule

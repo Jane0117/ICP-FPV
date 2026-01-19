@@ -11,6 +11,10 @@ module execute_props(
     input logic [31:0] immediate_data,
     input logic [31:0] pc_in,
     input control_type control_in,
+    input logic [31:0] wb_forward_data,
+    input logic [31:0] mem_forward_data,
+    input forward_type forward_rs1,
+    input forward_type forward_rs2,
     input control_type control_out,
     input logic [31:0] alu_data,
     input logic [31:0] memory_data,
@@ -25,6 +29,8 @@ module execute_props(
     logic [31:0] right_operand;
     logic [31:0] ref_alu_result;
     logic ref_zero_flag;
+    logic [31:0] rs2_forwarded;
+    logic [31:0] store_data;
     logic [31:0] ref_alu_data;
     logic [31:0] ref_memory_data;
     logic ref_pc_src;
@@ -35,8 +41,15 @@ module execute_props(
 
     always_comb begin
         data2_or_imm = (control_in.alu_src) ? immediate_data : data2;
-        left_operand = data1;
-        right_operand = data2_or_imm;
+        left_operand = ref_forward_select(data1, wb_forward_data, mem_forward_data, forward_rs1);
+        rs2_forwarded = ref_forward_select(data2_or_imm, wb_forward_data, mem_forward_data, forward_rs2);
+
+        case (control_in.encoding)
+            R_TYPE, S_TYPE, B_TYPE: right_operand = rs2_forwarded;
+            default: right_operand = data2_or_imm;
+        endcase
+        if (control_in.encoding == S_TYPE)
+            right_operand = data2_or_imm;
 
         ref_alu_result = ref_alu(control_in.alu_op, left_operand, right_operand);
         ref_zero_flag = (ref_alu_result == 0);
@@ -57,7 +70,8 @@ module execute_props(
         else
             ref_pc_src = 1'b0;
 
-        ref_memory_data = (control_in.encoding == S_TYPE) ? data2 : data2;
+        store_data = ref_forward_select(data2, wb_forward_data, mem_forward_data, forward_rs2);
+        ref_memory_data = (control_in.encoding == S_TYPE) ? store_data : data2;
         ref_pc_out = pc_in;
         ref_overflow_flag = ref_overflow(control_in.alu_op, left_operand, right_operand, ref_alu_result);
     end
@@ -94,7 +108,51 @@ module execute_props(
         overflow == ref_overflow_flag
     );
 
+    assert_forward_rs1_sel: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs1 == FORWARD_FROM_EX)  |-> (left_operand == mem_forward_data)
+    );
+    assert_forward_rs1_sel_mem: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs1 == FORWARD_FROM_MEM) |-> (left_operand == wb_forward_data)
+    );
+    assert_forward_rs1_sel_none: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs1 == FORWARD_NONE)     |-> (left_operand == data1)
+    );
+
+    assert_forward_rs2_sel: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs2 == FORWARD_FROM_EX)  |-> (rs2_forwarded == mem_forward_data)
+    );
+    assert_forward_rs2_sel_mem: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs2 == FORWARD_FROM_MEM) |-> (rs2_forwarded == wb_forward_data)
+    );
+    assert_forward_rs2_sel_none: assert property (@(posedge clk) disable iff (!reset_n)
+        (forward_rs2 == FORWARD_NONE)     |-> (rs2_forwarded == data2_or_imm)
+    );
+
+    assert_store_data_forward: assert property (@(posedge clk) disable iff (!reset_n)
+        (control_in.encoding == S_TYPE) |-> (memory_data == store_data)
+    );
+
     cover_b_type_taken: cover property (@(posedge clk) disable iff (!reset_n)
         control_in.encoding == B_TYPE && ref_pc_src
+    );
+
+    cover_forward_rs1_ex: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs1 == FORWARD_FROM_EX
+    );
+    cover_forward_rs1_mem: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs1 == FORWARD_FROM_MEM
+    );
+    cover_forward_rs1_none: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs1 == FORWARD_NONE
+    );
+
+    cover_forward_rs2_ex: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs2 == FORWARD_FROM_EX
+    );
+    cover_forward_rs2_mem: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs2 == FORWARD_FROM_MEM
+    );
+    cover_forward_rs2_none: cover property (@(posedge clk) disable iff (!reset_n)
+        forward_rs2 == FORWARD_NONE
     );
 endmodule
