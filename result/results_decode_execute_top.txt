@@ -3,12 +3,16 @@
    Property Summary: FPV
    -----------------
    > Assertion
-     - # found        : 11
-     - # proven       : 11
+     - # found        : 18
+     - # proven       : 18
+
+   > Vacuity
+     - # found        : 7
+     - # non_vacuous  : 7
 
    > Cover
-     - # found        : 6
-     - # covered      : 6
+     - # found        : 12
+     - # covered      : 12
 
    > Constraint
      - # found        : 1
@@ -18,7 +22,7 @@
    Property List:
    --------------
    > Assertion
-     # Assertion: 11
+     # Assertion: 18
      [   0] proven                                  -  decode_execute_top.chk.assert_control_matches_ref
      [   1] proven                                  -  decode_execute_top.chk.assert_execute_alu_data
      [   2] proven                                  -  decode_execute_top.chk.assert_execute_control_out
@@ -28,21 +32,34 @@
      [   6] proven                                  -  decode_execute_top.chk.assert_execute_overflow
      [   7] proven                                  -  decode_execute_top.chk.assert_execute_pc_out
      [   8] proven                                  -  decode_execute_top.chk.assert_execute_pc_src
-     [   9] proven                                  -  decode_execute_top.chk.assert_illegal_matches_ref
-     [  10] proven                                  -  decode_execute_top.chk.assert_sanitized_control
+     [   9] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel
+     [  10] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel_mem
+     [  11] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel_none
+     [  12] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel
+     [  13] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel_mem
+     [  14] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel_none
+     [  15] proven                                  -  decode_execute_top.chk.assert_illegal_matches_ref
+     [  16] proven                                  -  decode_execute_top.chk.assert_sanitized_control
+     [  17] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_store_data_forward
 
    > Cover
-     # Cover: 6
-     [  11] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_type
-     [  12] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_type
-     [  13] covered     (depth=3)                   -  decode_execute_top.chk.cover_j_type
-     [  14] covered     (depth=2)                   -  decode_execute_top.chk.cover_r_type
-     [  15] covered     (depth=4)                   -  decode_execute_top.chk.cover_s_type
-     [  16] covered     (depth=4)                   -  decode_execute_top.chk.cover_u_type
+     # Cover: 12
+     [  18] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_type
+     [  19] covered     (depth=4)                   -  decode_execute_top.chk.cover_forward_rs1_ex
+     [  20] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs1_mem
+     [  21] covered     (depth=3)                   -  decode_execute_top.chk.cover_forward_rs1_none
+     [  22] covered     (depth=4)                   -  decode_execute_top.chk.cover_forward_rs2_ex
+     [  23] covered     (depth=2)                   -  decode_execute_top.chk.cover_forward_rs2_mem
+     [  24] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs2_none
+     [  25] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_type
+     [  26] covered     (depth=3)                   -  decode_execute_top.chk.cover_j_type
+     [  27] covered     (depth=2)                   -  decode_execute_top.chk.cover_r_type
+     [  28] covered     (depth=4)                   -  decode_execute_top.chk.cover_s_type
+     [  29] covered     (depth=4)                   -  decode_execute_top.chk.cover_u_type
 
    > Constraint
      # Constraint: 1
-     [  17] constrained                             -  constant_17 - reset_n==1
+     [  30] constrained                             -  constant_30 - reset_n==1
 
 
 

@@ -3,12 +3,16 @@
    Property Summary: FPV
    -----------------
    > Assertion
-     - # found        : 8
-     - # proven       : 8
+     - # found        : 15
+     - # proven       : 15
+
+   > Vacuity
+     - # found        : 7
+     - # non_vacuous  : 7
 
    > Cover
-     - # found        : 1
-     - # covered      : 1
+     - # found        : 7
+     - # covered      : 7
 
    > Constraint
      - # found        : 1
@@ -18,23 +22,36 @@
    Property List:
    --------------
    > Assertion
-     # Assertion: 8
-     [  0] proven                                  -  execute_top_formal.chk.assert_alu_data
-     [  1] proven                                  -  execute_top_formal.chk.assert_control_out
-     [  2] proven                                  -  execute_top_formal.chk.assert_jalr_flag
-     [  3] proven                                  -  execute_top_formal.chk.assert_jalr_target
-     [  4] proven                                  -  execute_top_formal.chk.assert_memory_data
-     [  5] proven                                  -  execute_top_formal.chk.assert_overflow
-     [  6] proven                                  -  execute_top_formal.chk.assert_pc_out
-     [  7] proven                                  -  execute_top_formal.chk.assert_pc_src
+     # Assertion: 15
+     [   0] proven                                  -  execute_top_formal.chk.assert_alu_data
+     [   1] proven                                  -  execute_top_formal.chk.assert_control_out
+     [   2] proven                   (non_vacuous)  -  execute_top_formal.chk.assert_forward_rs1_sel
+     [   3] proven                   (non_vacuous)  -  execute_top_formal.chk.assert_forward_rs1_sel_mem
+     [   4] proven                   (non_vacuous)  -  execute_top_formal.chk.assert_forward_rs1_sel_none
+     [   5] proven                   (non_vacuous)  -  execute_top_formal.chk.assert_forward_rs2_sel
+     [   6] proven                   (non_vacuous)  -  execute_top_formal.chk.assert_forward_rs2_sel_mem
+     [   7] proven                   (non_vacuous)  -  execute_top_formal.chk.assert_forward_rs2_sel_none
+     [   8] proven                                  -  execute_top_formal.chk.assert_jalr_flag
+     [   9] proven                                  -  execute_top_formal.chk.assert_jalr_target
+     [  10] proven                                  -  execute_top_formal.chk.assert_memory_data
+     [  11] proven                                  -  execute_top_formal.chk.assert_overflow
+     [  12] proven                                  -  execute_top_formal.chk.assert_pc_out
+     [  13] proven                                  -  execute_top_formal.chk.assert_pc_src
+     [  14] proven                   (non_vacuous)  -  execute_top_formal.chk.assert_store_data_forward
 
    > Cover
-     # Cover: 1
-     [  8] covered     (depth=1)                   -  execute_top_formal.chk.cover_b_type_taken
+     # Cover: 7
+     [  15] covered     (depth=1)                   -  execute_top_formal.chk.cover_b_type_taken
+     [  16] covered     (depth=1)                   -  execute_top_formal.chk.cover_forward_rs1_ex
+     [  17] covered     (depth=1)                   -  execute_top_formal.chk.cover_forward_rs1_mem
+     [  18] covered     (depth=1)                   -  execute_top_formal.chk.cover_forward_rs1_none
+     [  19] covered     (depth=1)                   -  execute_top_formal.chk.cover_forward_rs2_ex
+     [  20] covered     (depth=1)                   -  execute_top_formal.chk.cover_forward_rs2_mem
+     [  21] covered     (depth=1)                   -  execute_top_formal.chk.cover_forward_rs2_none
 
    > Constraint
      # Constraint: 1
-     [  9] constrained                             -  constant_9 - reset_n==1
+     [  22] constrained                             -  constant_22 - reset_n==1
 
 
 

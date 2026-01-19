@@ -25,3 +25,6 @@ results*.txt
 # allow publishing results under result/
 !result/
 !result/**
+
+# allow publishing formal reports
+!results/*.txt
