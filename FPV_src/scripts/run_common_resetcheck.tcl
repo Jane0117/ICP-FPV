@@ -3,6 +3,7 @@
 #------------------------------------------------------------
 
 set_fml_appmode FPV
+puts "RUNNING RESET CHECKING FLOW"
 
 # IMPORTANT: use quotes so Tcl expands $SVA_FILES
 analyze -format sverilog \
@@ -17,4 +18,4 @@ create_reset reset_n -sense low
 sim_run -stable
 
 check_fv -block
-report_fv -list > results_${TOP}.txt
+report_fv -list > results_${TOP}_reset.txt

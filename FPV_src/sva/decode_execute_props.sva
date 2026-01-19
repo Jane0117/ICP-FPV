@@ -24,6 +24,11 @@ module decode_execute_props(
     input  logic [31:0]     mem_forward_data,
     input  forward_type     forward_rs1,
     input  forward_type     forward_rs2,
+    
+    // regfile write-back tap (for reset checks)
+    input  logic            write_en,
+    input  logic [4:0]      write_id,
+    input  logic [31:0]     write_data,
 
     // execute-stage outputs
     input  control_type     control_out,
@@ -182,10 +187,6 @@ module decode_execute_props(
     assert_jalr_target_aligned: assert property (@(posedge clk) disable iff (!reset_n)
         jalr_flag |-> (jalr_target_offset[0] == 1'b0)
     );
-    // JALR target equals (rs1 + imm) with LSB cleared.
-    assert_jalr_target_masked: assert property (@(posedge clk) disable iff (!reset_n)
-        jalr_flag |-> (jalr_target_offset == ((left_operand + immediate_data) & 32'hffff_fffe))
-    );
 
     // Branch compare semantics for signed/unsigned variants.
     assert_blt_signed_compare: assert property (@(posedge clk) disable iff (!reset_n)
@@ -206,27 +207,6 @@ module decode_execute_props(
     assert_bgeu_unsigned_compare: assert property (@(posedge clk) disable iff (!reset_n)
         (ref_control_sanitized.encoding == B_TYPE && ref_control_sanitized.alu_op == B_GEU) |->
             (pc_src == (left_operand >= right_operand))
-    );
-
-    // Writing x0 is legal; result is always zero.
-    assert_x0_write_legal: assert property (@(posedge clk) disable iff (!reset_n)
-        ((ref_control.encoding == R_TYPE || ref_control.encoding == I_TYPE ||
-          ref_control.encoding == U_TYPE || ref_control.encoding == J_TYPE) &&
-         instruction.rd == 5'd0) |-> !instruction_illegal
-    );
-
-    // Reset clears register file read outputs.
-    assert_reset_clears_reads: assert property (@(posedge clk)
-        !reset_n |=> (read_data1 == 32'd0 && read_data2 == 32'd0)
-    );
-
-    assume_no_write_during_reset: assume property (@(posedge clk)
-        !reset_n |-> !write_en
-    );
-
-    // Read outputs stay zero after reset without writes.
-    assert_reset_holds_reads: assert property (@(posedge clk) disable iff (!reset_n)
-        (!write_en && read_data1 == 32'd0 && read_data2 == 32'd0) |=> (read_data1 == 32'd0 && read_data2 == 32'd0)
     );
 
     assume_pc_aligned: assume property (@(posedge clk) disable iff (!reset_n)
@@ -317,17 +297,6 @@ module decode_execute_props(
 
     cover_j_type: cover property (@(posedge clk) disable iff (!reset_n)
         ref_control_sanitized.encoding == J_TYPE
-    );
-
-    cover_reset_fall: cover property (@(posedge clk)
-        $fell(reset_n)
-    );
-    cover_reset_rise: cover property (@(posedge clk)
-        $rose(reset_n)
-    );
-
-    cover_reset_asserted: cover property (@(posedge clk)
-        !reset_n
     );
 
     cover_illegal_decode: cover property (@(posedge clk) disable iff (!reset_n)

@@ -3,63 +3,127 @@
    Property Summary: FPV
    -----------------
    > Assertion
-     - # found        : 18
-     - # proven       : 18
+     - # found        : 29
+     - # proven       : 24
+     - # falsified    : 4
+     - # vacuous      : 1
 
    > Vacuity
-     - # found        : 7
-     - # non_vacuous  : 7
+     - # found        : 21
+     - # non_vacuous  : 19
+     - # vacuous      : 2
 
    > Cover
-     - # found        : 12
-     - # covered      : 12
+     - # found        : 55
+     - # covered      : 53
+     - # uncoverable  : 2
 
    > Constraint
-     - # found        : 1
+     - # found        : 7
 
 
   List Results
    Property List:
    --------------
    > Assertion
-     # Assertion: 18
-     [   0] proven                                  -  decode_execute_top.chk.assert_control_matches_ref
-     [   1] proven                                  -  decode_execute_top.chk.assert_execute_alu_data
-     [   2] proven                                  -  decode_execute_top.chk.assert_execute_control_out
-     [   3] proven                                  -  decode_execute_top.chk.assert_execute_jalr_flag
-     [   4] proven                                  -  decode_execute_top.chk.assert_execute_jalr_target
-     [   5] proven                                  -  decode_execute_top.chk.assert_execute_memory_data
-     [   6] proven                                  -  decode_execute_top.chk.assert_execute_overflow
-     [   7] proven                                  -  decode_execute_top.chk.assert_execute_pc_out
-     [   8] proven                                  -  decode_execute_top.chk.assert_execute_pc_src
-     [   9] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel
-     [  10] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel_mem
-     [  11] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel_none
-     [  12] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel
-     [  13] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel_mem
-     [  14] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel_none
-     [  15] proven                                  -  decode_execute_top.chk.assert_illegal_matches_ref
-     [  16] proven                                  -  decode_execute_top.chk.assert_sanitized_control
-     [  17] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_store_data_forward
+     # Assertion: 29
+     [   0] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_bge_signed_compare
+     [   1] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_bgeu_unsigned_compare
+     [   2] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_blt_signed_compare
+     [   3] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_bltu_unsigned_compare
+     [   4] proven                                  -  decode_execute_top.chk.assert_control_matches_ref
+     [   5] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_decode_failed_illegal
+     [   6] proven                                  -  decode_execute_top.chk.assert_execute_alu_data
+     [   7] proven                                  -  decode_execute_top.chk.assert_execute_control_out
+     [   8] proven                                  -  decode_execute_top.chk.assert_execute_jalr_flag
+     [   9] proven                                  -  decode_execute_top.chk.assert_execute_jalr_target
+     [  10] proven                                  -  decode_execute_top.chk.assert_execute_memory_data
+     [  11] proven                                  -  decode_execute_top.chk.assert_execute_overflow
+     [  12] proven                                  -  decode_execute_top.chk.assert_execute_pc_out
+     [  13] proven                                  -  decode_execute_top.chk.assert_execute_pc_src
+     [  14] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel
+     [  15] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel_mem
+     [  16] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs1_sel_none
+     [  17] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel
+     [  18] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel_mem
+     [  19] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_forward_rs2_sel_none
+     [  20] proven                                  -  decode_execute_top.chk.assert_illegal_matches_ref
+     [  21] falsified   (depth=1)    (non_vacuous)  -  decode_execute_top.chk.assert_jalr_target_aligned
+     [  22] falsified   (depth=1)    (non_vacuous)  -  decode_execute_top.chk.assert_jalr_target_masked
+     [  23] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_reg_illegal_illegal
+     [  24] vacuous                  (vacuous)      -  decode_execute_top.chk.assert_reset_clears_reads
+     [  25] falsified   (depth=2)    (non_vacuous)  -  decode_execute_top.chk.assert_reset_holds_reads
+     [  26] proven                                  -  decode_execute_top.chk.assert_sanitized_control
+     [  27] proven                   (non_vacuous)  -  decode_execute_top.chk.assert_store_data_forward
+     [  28] falsified   (depth=1)    (non_vacuous)  -  decode_execute_top.chk.assert_x0_write_legal
 
    > Cover
-     # Cover: 12
-     [  18] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_type
-     [  19] covered     (depth=4)                   -  decode_execute_top.chk.cover_forward_rs1_ex
-     [  20] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs1_mem
-     [  21] covered     (depth=3)                   -  decode_execute_top.chk.cover_forward_rs1_none
-     [  22] covered     (depth=4)                   -  decode_execute_top.chk.cover_forward_rs2_ex
-     [  23] covered     (depth=2)                   -  decode_execute_top.chk.cover_forward_rs2_mem
-     [  24] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs2_none
-     [  25] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_type
-     [  26] covered     (depth=3)                   -  decode_execute_top.chk.cover_j_type
-     [  27] covered     (depth=2)                   -  decode_execute_top.chk.cover_r_type
-     [  28] covered     (depth=4)                   -  decode_execute_top.chk.cover_s_type
-     [  29] covered     (depth=4)                   -  decode_execute_top.chk.cover_u_type
+     # Cover: 55
+     [  35] covered     (depth=1)                   -  decode_execute_top.chk.cover_auipc
+     [  36] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_beq
+     [  37] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_bge
+     [  38] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_bgeu
+     [  39] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_blt
+     [  40] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_bltu
+     [  41] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_bne
+     [  42] covered     (depth=1)                   -  decode_execute_top.chk.cover_b_type
+     [  43] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs1_ex
+     [  44] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs1_mem
+     [  45] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs1_none
+     [  46] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs2_ex
+     [  47] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs2_mem
+     [  48] covered     (depth=1)                   -  decode_execute_top.chk.cover_forward_rs2_none
+     [  49] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_addi
+     [  50] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_andi
+     [  51] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_ori
+     [  52] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_slli
+     [  53] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_slti
+     [  54] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_sltiu
+     [  55] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_srai
+     [  56] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_srli
+     [  57] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_type
+     [  58] covered     (depth=1)                   -  decode_execute_top.chk.cover_i_xori
+     [  59] covered     (depth=1)                   -  decode_execute_top.chk.cover_illegal_any
+     [  60] covered     (depth=1)                   -  decode_execute_top.chk.cover_illegal_decode
+     [  61] covered     (depth=1)                   -  decode_execute_top.chk.cover_illegal_reg
+     [  62] covered     (depth=1)                   -  decode_execute_top.chk.cover_j_type
+     [  63] covered     (depth=1)                   -  decode_execute_top.chk.cover_jal
+     [  64] covered     (depth=1)                   -  decode_execute_top.chk.cover_jalr
+     [  65] covered     (depth=1)                   -  decode_execute_top.chk.cover_l_lb
+     [  66] covered     (depth=1)                   -  decode_execute_top.chk.cover_l_lbu
+     [  67] covered     (depth=1)                   -  decode_execute_top.chk.cover_l_lh
+     [  68] covered     (depth=1)                   -  decode_execute_top.chk.cover_l_lhu
+     [  69] covered     (depth=1)                   -  decode_execute_top.chk.cover_l_lw
+     [  70] covered     (depth=1)                   -  decode_execute_top.chk.cover_lui
+     [  71] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_add
+     [  72] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_and
+     [  73] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_or
+     [  74] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_sll
+     [  75] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_slt
+     [  76] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_sltu
+     [  77] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_sra
+     [  78] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_srl
+     [  79] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_sub
+     [  80] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_type
+     [  81] covered     (depth=1)                   -  decode_execute_top.chk.cover_r_xor
+     [  82] uncoverable                             -  decode_execute_top.chk.cover_reset_asserted
+     [  83] uncoverable                             -  decode_execute_top.chk.cover_reset_fall
+     [  84] covered     (depth=1)                   -  decode_execute_top.chk.cover_reset_rise
+     [  85] covered     (depth=1)                   -  decode_execute_top.chk.cover_s_sb
+     [  86] covered     (depth=1)                   -  decode_execute_top.chk.cover_s_sh
+     [  87] covered     (depth=1)                   -  decode_execute_top.chk.cover_s_sw
+     [  88] covered     (depth=1)                   -  decode_execute_top.chk.cover_s_type
+     [  89] covered     (depth=1)                   -  decode_execute_top.chk.cover_u_type
 
    > Constraint
-     # Constraint: 1
-     [  30] constrained                             -  constant_30 - reset_n==1
+     # Constraint: 7
+     [  29] constrained                             -  decode_execute_top.chk.assume_instruction_stable
+     [  30] vacuous                  (vacuous)      -  decode_execute_top.chk.assume_no_write_during_reset
+     [  31] constrained                             -  decode_execute_top.chk.assume_pc_aligned
+     [  32] constrained              (non_vacuous)  -  decode_execute_top.chk.assume_shift_imm_funct7
+     [  33] constrained              (non_vacuous)  -  decode_execute_top.chk.assume_shift_imm_funct7_alt
+     [  34] constrained                             -  decode_execute_top.chk.assume_supported_opcode
+     [  90] constrained                             -  constant_90 - reset_n==1
 
 
 
